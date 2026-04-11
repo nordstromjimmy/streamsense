@@ -135,7 +135,12 @@ export default function SessionLiveView({ session }: Props) {
 
   return (
     <div
-      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
     >
       {/* Header */}
       <header
@@ -288,7 +293,7 @@ export default function SessionLiveView({ session }: Props) {
             status === "COMPLETED" && summary ? "1fr 380px" : "1fr",
           gap: 0,
           overflow: "hidden",
-          maxHeight: "calc(100vh - 65px)",
+          height: "100%", //
         }}
       >
         {/* Chat feed */}
@@ -298,8 +303,10 @@ export default function SessionLiveView({ session }: Props) {
             flexDirection: "column",
             borderRight: summary ? "1px solid var(--border)" : "none",
             overflow: "hidden",
+            height: "100%",
           }}
         >
+          {/* Sticky header — always visible */}
           <div
             style={{
               padding: "12px 20px",
@@ -307,6 +314,7 @@ export default function SessionLiveView({ session }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              flexShrink: 0,
             }}
           >
             <span
@@ -340,6 +348,7 @@ export default function SessionLiveView({ session }: Props) {
             )}
           </div>
 
+          {/* Scrollable messages */}
           <div
             style={{
               flex: 1,
@@ -348,6 +357,7 @@ export default function SessionLiveView({ session }: Props) {
               display: "flex",
               flexDirection: "column",
               gap: 6,
+              minHeight: 0,
             }}
           >
             {messages.length === 0 && status === "ACTIVE" && (
