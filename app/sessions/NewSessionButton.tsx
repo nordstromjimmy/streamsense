@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 export default function NewSessionButton({ gameId }: { gameId: string }) {
   const [showForm, setShowForm] = useState(false);
   const [channel, setChannel] = useState("");
+  const [allChat, setAllChat] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId, twitchChannel: cleaned }),
+        body: JSON.stringify({ gameId, twitchChannel: cleaned, allChat }),
       });
       if (!res.ok) throw new Error();
       const { session } = await res.json();
@@ -48,7 +49,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
           fontFamily: "'Space Mono', monospace",
         }}
       >
-        New Session
+        + New Session
       </button>
     );
   }
@@ -62,6 +63,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
         flexWrap: "wrap",
       }}
     >
+      {/* Channel input */}
       <div style={{ position: "relative" }}>
         <span
           style={{
@@ -98,6 +100,45 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
           }}
         />
       </div>
+
+      {/* All Chat toggle */}
+      <button
+        onClick={() => setAllChat((v) => !v)}
+        title="All Chat captures every message without filtering. Best for smaller streams."
+        style={{
+          padding: "8px 12px",
+          background: allChat ? "var(--accent-dim)" : "transparent",
+          border: allChat
+            ? "1px solid var(--accent-border)"
+            : "1px solid var(--border)",
+          borderRadius: 8,
+          color: allChat ? "var(--accent)" : "var(--text-muted)",
+          cursor: "pointer",
+          fontSize: "0.78rem",
+          fontFamily: "'Space Mono', monospace",
+          fontWeight: allChat ? 700 : 400,
+          transition: "all 0.15s",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <span
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            background: allChat ? "var(--accent)" : "var(--border-bright)",
+            display: "inline-block",
+            flexShrink: 0,
+            transition: "background 0.15s",
+          }}
+        />
+        All Chat
+      </button>
+
+      {/* Start button */}
       <button
         onClick={handleStart}
         disabled={loading}
@@ -114,12 +155,15 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
           opacity: loading ? 0.6 : 1,
         }}
       >
-        {loading ? "Starting..." : "Start "}
+        {loading ? "Starting..." : "Start →"}
       </button>
+
+      {/* Cancel */}
       <button
         onClick={() => {
           setShowForm(false);
           setChannel("");
+          setAllChat(false);
           setError("");
         }}
         style={{
@@ -134,6 +178,20 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
       >
         Cancel
       </button>
+
+      {/* Hint text when All Chat is on */}
+      {allChat && (
+        <span
+          style={{
+            fontSize: "0.72rem",
+            color: "var(--text-muted)",
+            fontFamily: "'Space Mono', monospace",
+          }}
+        >
+          All messages captured — best for small streams
+        </span>
+      )}
+
       {error && (
         <span style={{ fontSize: "0.78rem", color: "var(--red)" }}>
           {error}

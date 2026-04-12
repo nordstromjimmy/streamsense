@@ -95,6 +95,19 @@ async function connectToSession(sessionId: string, channel: string) {
     options: { debug: false },
   });
 
+  // Fetch the session to get the allChat flag
+  const sessionRecord = await db.trackSession.findUnique({
+    where: { id: sessionId },
+    select: { allChat: true },
+  });
+  const allChat = sessionRecord?.allChat ?? false;
+
+  if (allChat) {
+    console.log(
+      `[worker] Session ${sessionId} is in All Chat mode — filters disabled`,
+    );
+  }
+
   try {
     await client.connect();
   } catch (err) {
@@ -120,22 +133,25 @@ async function connectToSession(sessionId: string, channel: string) {
       "unknown"
     ).toLowerCase();
 
-    // Structural filters — order matters, cheapest checks first
-    if (isBot(username)) return;
-    if (isNoise(message)) return;
-    if (hasUrl(message)) return;
-    if (message.trim().split(/\s+/).length < 4) return;
+    if (allChat) {
+      // All Chat mode — only filter bots and pure noise, nothing else
+      if (isBot(username)) return;
+      if (isNoise(message)) return;
+    } else {
+      // Smart filter mode — full filtering pipeline
+      if (isBot(username)) return;
+      if (isNoise(message)) return;
+      if (hasUrl(message)) return;
+      if (message.trim().split(/\s+/).length < 4) return;
+      if (!isRelevant(message)) return;
+    }
 
-    // Relevance filter — only keep messages about the game
-    if (!isRelevant(message)) return;
-
-    // Session cap
+    // Caps apply in both modes
     if (sessionMessageCount >= MAX_MESSAGES_PER_SESSION) {
       console.log(`[worker] Session ${sessionId} hit message cap`);
       return;
     }
 
-    // Per-user cap
     const userCount = userMessageCounts.get(username) ?? 0;
     if (userCount >= MAX_MESSAGES_PER_USER) return;
 
