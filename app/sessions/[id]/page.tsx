@@ -22,9 +22,6 @@ export default async function SessionPage({
     },
   });
 
-  console.log("user id:", session.user.id);
-  console.log("game userId:", trackSession?.game?.userId);
-
   if (!trackSession || trackSession.game.userId !== session.user.id) {
     redirect("/dashboard");
   }

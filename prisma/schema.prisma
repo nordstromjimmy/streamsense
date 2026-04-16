@@ -13,10 +13,20 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  isPro         Boolean        @default(false)
   games         Game[]
   createdAt     DateTime  @default(now())
   accounts      Account[]
   sessions      Session[]
+  summaryUsage  SummaryUsage[]
+}
+
+model SummaryUsage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId   String   @unique
+  createdAt   DateTime @default(now())
 }
 
 model Account {

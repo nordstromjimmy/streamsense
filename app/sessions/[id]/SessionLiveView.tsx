@@ -40,6 +40,35 @@ function parseSummaryField(val: string): string[] {
   }
 }
 
+function AutoRefresh({
+  sessionId,
+  onSummary,
+}: {
+  sessionId: string;
+  onSummary: (summary: Summary) => void;
+}) {
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/sessions/${sessionId}/messages`);
+      const data = await res.json();
+      if (data.summary) {
+        onSummary(data.summary);
+        clearInterval(interval);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [sessionId, onSummary]);
+
+  return (
+    <span
+      className="mono"
+      style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}
+    >
+      checking...
+    </span>
+  );
+}
+
 export default function SessionLiveView({ session }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState(session.status);
@@ -49,6 +78,12 @@ export default function SessionLiveView({ session }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+
+  const [limitError, setLimitError] = useState<string | null>(null);
+  const [usageInfo, setUsageInfo] = useState<{
+    usedToday: number;
+    limit: number;
+  } | null>(null);
 
   // Poll for new messages
   useEffect(() => {
@@ -107,10 +142,33 @@ export default function SessionLiveView({ session }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    fetch("/api/sessions/usage")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.isPro) {
+          setUsageInfo({ usedToday: data.usedToday, limit: data.limit });
+        }
+      });
+  }, []);
+
   async function handleStop() {
     setStopping(true);
-    await fetch(`/api/sessions/${session.id}`, { method: "PATCH" });
+    setLimitError(null);
+
+    const res = await fetch(`/api/sessions/${session.id}`, { method: "PATCH" });
+    const data = await res.json();
+
+    if (res.status === 429) {
+      setLimitError(data.error);
+      setStopping(false);
+      return;
+    }
+
     setStatus("COMPLETED");
+    if (data.usedToday !== undefined) {
+      setUsageInfo({ usedToday: data.usedToday, limit: data.limit });
+    }
     setStopping(false);
   }
 
@@ -196,6 +254,17 @@ export default function SessionLiveView({ session }: Props) {
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Usage indicator */}
+          {usageInfo && status === "ACTIVE" && (
+            <span
+              className="mono"
+              style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}
+            >
+              {usageInfo.limit - usageInfo.usedToday}/{usageInfo.limit}{" "}
+              summaries left today
+            </span>
+          )}
+
           <span
             className="badge"
             style={{
@@ -233,6 +302,7 @@ export default function SessionLiveView({ session }: Props) {
               ? "Live"
               : status.charAt(0) + status.slice(1).toLowerCase()}
           </span>
+
           {status === "ACTIVE" && (
             <button
               onClick={handleStop}
@@ -253,6 +323,7 @@ export default function SessionLiveView({ session }: Props) {
               {stopping ? "Stopping..." : "Stop & Summarize"}
             </button>
           )}
+
           {status === "COMPLETED" && (
             <button
               onClick={handleDelete}
@@ -285,6 +356,36 @@ export default function SessionLiveView({ session }: Props) {
         </div>
       </header>
 
+      {limitError && (
+        <div
+          style={{
+            padding: "12px 24px",
+            background: "var(--red-dim)",
+            borderBottom: "1px solid rgba(255,77,106,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: "0.85rem", color: "var(--red)" }}>
+            ⚠ {limitError}
+          </span>
+          <button
+            onClick={() => setLimitError(null)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--red)",
+              cursor: "pointer",
+              fontSize: "1rem",
+              padding: 0,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div
         style={{
           flex: 1,
@@ -564,23 +665,12 @@ export default function SessionLiveView({ session }: Props) {
             <div style={{ fontSize: 24 }}>⚙️</div>
             <p style={{ fontSize: "0.85rem", textAlign: "center" }}>
               Generating AI summary...
-              <br />
-              Refresh in a few seconds.
             </p>
-            <button
-              onClick={() => router.refresh()}
-              style={{
-                padding: "8px 16px",
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontSize: "0.82rem",
-              }}
-            >
-              Refresh
-            </button>
+            {/* Auto-polls every 3 seconds until summary appears */}
+            <AutoRefresh
+              onSummary={(s) => setSummary(s)}
+              sessionId={session.id}
+            />
           </div>
         )}
       </div>
