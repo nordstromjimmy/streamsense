@@ -89,7 +89,7 @@ export default function DashboardClient({
               textDecoration: "none",
             }}
           >
-            📡 StreamSense
+            StreamSense
           </Link>
           <span style={{ color: "var(--text-dim)", margin: "0 4px" }}>/</span>
           <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>

@@ -25,6 +25,7 @@ interface Props {
     id: string;
     twitchChannel: string;
     status: string;
+    autoStoppedReason?: string | null;
     startedAt: Date;
     game: { id: string; name: string; imageUrl: string | null };
     summary: Summary | null;
@@ -73,7 +74,7 @@ export default function SessionLiveView({ session }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState(session.status);
   const [summary, setSummary] = useState<Summary | null>(session.summary);
-  const [stopping, setStopping] = useState(false);
+  const [summarizing, setSummarizing] = useState(false);
   const lastIdRef = useRef<string | undefined>(undefined);
   const bottomRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -153,15 +154,15 @@ export default function SessionLiveView({ session }: Props) {
   }, []);
 
   async function handleStop() {
-    setStopping(true);
+    setSummarizing(true);
     setLimitError(null);
-
+    // Just stop — don't summarize yet
     const res = await fetch(`/api/sessions/${session.id}`, { method: "PATCH" });
     const data = await res.json();
 
     if (res.status === 429) {
       setLimitError(data.error);
-      setStopping(false);
+      setSummarizing(false);
       return;
     }
 
@@ -169,7 +170,38 @@ export default function SessionLiveView({ session }: Props) {
     if (data.usedToday !== undefined) {
       setUsageInfo({ usedToday: data.usedToday, limit: data.limit });
     }
-    setStopping(false);
+    setSummarizing(false);
+  }
+
+  async function handleSummarize() {
+    setSummarizing(true);
+    setLimitError(null);
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/summarize`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (res.status === 429) {
+        setLimitError(data.error);
+        setSummarizing(false);
+        return;
+      }
+
+      // Poll until summary appears
+      const interval = setInterval(async () => {
+        const r = await fetch(`/api/sessions/${session.id}/messages`);
+        const d = await r.json();
+        if (d.summary) {
+          setSummary(d.summary);
+          setSummarizing(false);
+          clearInterval(interval);
+        }
+      }, 2000);
+    } catch {
+      setLimitError("Something went wrong. Try again.");
+      setSummarizing(false);
+    }
   }
 
   async function handleDelete() {
@@ -221,7 +253,7 @@ export default function SessionLiveView({ session }: Props) {
               textDecoration: "none",
             }}
           >
-            📡 StreamSense
+            StreamSense
           </Link>
           <span style={{ color: "var(--text-dim)", margin: "0 4px" }}>/</span>
           <Link
@@ -306,7 +338,7 @@ export default function SessionLiveView({ session }: Props) {
           {status === "ACTIVE" && (
             <button
               onClick={handleStop}
-              disabled={stopping}
+              disabled={summarizing}
               style={{
                 padding: "8px 18px",
                 background: "var(--red)",
@@ -317,10 +349,10 @@ export default function SessionLiveView({ session }: Props) {
                 fontSize: "0.82rem",
                 cursor: "pointer",
                 fontFamily: "'Space Mono', monospace",
-                opacity: stopping ? 0.6 : 1,
+                opacity: summarizing ? 0.6 : 1,
               }}
             >
-              {stopping ? "Stopping..." : "Stop & Summarize"}
+              {summarizing ? "Stopping..." : "Stop & Summarize"}
             </button>
           )}
 
@@ -355,6 +387,28 @@ export default function SessionLiveView({ session }: Props) {
           )}
         </div>
       </header>
+
+      {/* Auto-stop notice */}
+      {session.autoStoppedReason && status === "COMPLETED" && (
+        <div
+          style={{
+            padding: "10px 24px",
+            background: "var(--accent-dim)",
+            borderBottom: "1px solid var(--accent-border)",
+            fontSize: "0.82rem",
+            color: "var(--accent)",
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span>⚡</span>
+          <span>
+            Session auto-stopped: <strong>{session.autoStoppedReason}</strong>
+          </span>
+        </div>
+      )}
 
       {limitError && (
         <div
@@ -662,15 +716,51 @@ export default function SessionLiveView({ session }: Props) {
               color: "var(--text-muted)",
             }}
           >
-            <div style={{ fontSize: 24 }}>⚙️</div>
-            <p style={{ fontSize: "0.85rem", textAlign: "center" }}>
-              Generating AI summary...
+            <div style={{ fontSize: 24 }}>✅</div>
+            <p style={{ fontSize: "0.85rem", textAlign: "center", margin: 0 }}>
+              Session complete — ready to summarize.
             </p>
-            {/* Auto-polls every 3 seconds until summary appears */}
-            <AutoRefresh
-              onSummary={(s) => setSummary(s)}
-              sessionId={session.id}
-            />
+            <p
+              style={{
+                fontSize: "0.78rem",
+                textAlign: "center",
+                color: "var(--text-dim)",
+                margin: 0,
+              }}
+            >
+              {usageInfo &&
+                `${usageInfo.limit - usageInfo.usedToday} of ${usageInfo.limit} summaries remaining today`}
+            </p>
+            <button
+              onClick={handleSummarize}
+              disabled={summarizing}
+              style={{
+                padding: "10px 24px",
+                background: "var(--accent)",
+                color: "#000",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: "0.88rem",
+                cursor: summarizing ? "not-allowed" : "pointer",
+                fontFamily: "'Space Mono', monospace",
+                opacity: summarizing ? 0.6 : 1,
+              }}
+            >
+              {summarizing ? "Generating..." : "✦ Summarize Session"}
+            </button>
+            {limitError && (
+              <p
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--red)",
+                  margin: 0,
+                  textAlign: "center",
+                }}
+              >
+                {limitError}
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -32,8 +32,16 @@ function isBot(username: string): boolean {
   );
 }
 
+// Token cache — reuse until it expires
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
 // Get an app access token using client credentials
 export async function getAppAccessToken(): Promise<string> {
+  // Return cached token if still valid (with 60s buffer)
+  if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
+    return cachedToken.token;
+  }
+
   const res = await fetch("https://id.twitch.tv/oauth2/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -43,8 +51,14 @@ export async function getAppAccessToken(): Promise<string> {
       grant_type: "client_credentials",
     }),
   });
+
   const data = await res.json();
-  return data.access_token;
+  cachedToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + data.expires_in * 1000,
+  };
+
+  return cachedToken.token;
 }
 
 // Search Twitch for games matching a query
@@ -64,6 +78,38 @@ export async function searchTwitchGames(
   if (!res.ok) return [];
   const data = await res.json();
   return data.data ?? [];
+}
+
+export async function getStreamInfo(channel: string): Promise<{
+  game_id: string;
+  game_name: string;
+  user_name: string;
+  title: string;
+} | null> {
+  const token = await getAppAccessToken();
+  const res = await fetch(
+    `https://api.twitch.tv/helix/streams?user_login=${encodeURIComponent(channel.toLowerCase())}`,
+    {
+      headers: {
+        "Client-Id": process.env.TWITCH_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!res.ok) {
+    console.error(
+      `[twitch] getStreamInfo failed: ${res.status} ${await res.text()}`,
+    );
+    return null;
+  }
+
+  const data = await res.json();
+  /*   console.log(
+    `[twitch] getStreamInfo for #${channel}:`,
+    JSON.stringify(data.data),
+  ); */
+  return data.data?.[0] ?? null;
 }
 
 export async function startTrackingSession(

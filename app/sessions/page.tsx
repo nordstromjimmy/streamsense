@@ -60,7 +60,7 @@ export default async function SessionsPage({
               textDecoration: "none",
             }}
           >
-            📡 StreamSense
+            StreamSense
           </Link>
           <span style={{ color: "var(--text-dim)", margin: "0 4px" }}>/</span>
           <Link
@@ -127,7 +127,6 @@ export default async function SessionsPage({
 
         {sessions.length === 0 ? (
           <div className="card" style={{ padding: 48, textAlign: "center" }}>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>📭</div>
             <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
               No sessions yet. Start tracking a stream to collect feedback.
             </p>

@@ -99,7 +99,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
           fontFamily: "'Space Mono', monospace",
         }}
       >
-        + New Session
+        New Session
       </button>
     );
   }

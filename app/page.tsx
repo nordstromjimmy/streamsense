@@ -22,7 +22,7 @@ export default function LandingPage() {
             fontSize: "1rem",
           }}
         >
-          📡 StreamSense
+          StreamSense
         </span>
         <Link
           href="/dashboard"

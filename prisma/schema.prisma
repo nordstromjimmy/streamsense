@@ -76,16 +76,17 @@ model Game {
 }
 
 model TrackSession {
-  id            String        @id @default(cuid())
-  gameId        String
-  game          Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  twitchChannel String
-  status        String        @default("ACTIVE")
-  allChat       Boolean       @default(false)
-  startedAt     DateTime      @default(now())
-  endedAt       DateTime?
-  messages      ChatMessage[]
-  summary       Summary?
+  id                String        @id @default(cuid())
+  gameId            String
+  game              Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  twitchChannel     String
+  status            String        @default("ACTIVE")
+  allChat           Boolean       @default(false)
+  autoStoppedReason String?
+  startedAt         DateTime      @default(now())
+  endedAt           DateTime?
+  messages          ChatMessage[]
+  summary           Summary?
 }
 
 model ChatMessage {

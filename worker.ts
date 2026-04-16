@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 import { Client, ChatUserstate } from "tmi.js";
 import { PrismaClient } from "@prisma/client";
+import { getStreamInfo } from "./app/lib/twitch";
 
 const db = new PrismaClient();
 
@@ -95,16 +98,28 @@ async function connectToSession(sessionId: string, channel: string) {
     options: { debug: false },
   });
 
-  // Fetch the session to get the allChat flag
+  // Fetch session + game info
   const sessionRecord = await db.trackSession.findUnique({
     where: { id: sessionId },
-    select: { allChat: true },
+    include: { game: true },
   });
+
   const allChat = sessionRecord?.allChat ?? false;
+  const expectedGameId = sessionRecord?.game?.twitchGameId ?? null;
 
   if (allChat) {
     console.log(
       `[worker] Session ${sessionId} is in All Chat mode — filters disabled`,
+    );
+  }
+
+  if (expectedGameId) {
+    console.log(
+      `[worker] Will monitor game changes for session ${sessionId} (expected game ID: ${expectedGameId})`,
+    );
+  } else {
+    console.log(
+      `[worker] Game has no Twitch ID — game change detection disabled for session ${sessionId}`,
     );
   }
 
@@ -134,11 +149,9 @@ async function connectToSession(sessionId: string, channel: string) {
     ).toLowerCase();
 
     if (allChat) {
-      // All Chat mode — only filter bots and pure noise, nothing else
       if (isBot(username)) return;
       if (isNoise(message)) return;
     } else {
-      // Smart filter mode — full filtering pipeline
       if (isBot(username)) return;
       if (isNoise(message)) return;
       if (hasUrl(message)) return;
@@ -146,7 +159,6 @@ async function connectToSession(sessionId: string, channel: string) {
       if (!isRelevant(message)) return;
     }
 
-    // Caps apply in both modes
     if (sessionMessageCount >= MAX_MESSAGES_PER_SESSION) {
       console.log(`[worker] Session ${sessionId} hit message cap`);
       return;
@@ -166,11 +178,82 @@ async function connectToSession(sessionId: string, channel: string) {
     }
   });
 
-  activeConnections.set(sessionId, () => {
+  // Game change detection — poll every 60 seconds
+  let gameCheckInterval: NodeJS.Timeout | null = null;
+  let consecutiveNullCount = 0;
+  const NULL_THRESHOLD = 3; // require 3 consecutive nulls before auto-stopping
+
+  if (expectedGameId) {
+    gameCheckInterval = setInterval(async () => {
+      try {
+        const current = await db.trackSession.findUnique({
+          where: { id: sessionId },
+          select: { status: true },
+        });
+        if (!current || current.status !== "ACTIVE") {
+          if (gameCheckInterval) clearInterval(gameCheckInterval);
+          return;
+        }
+
+        const streamInfo = await getStreamInfo(channel);
+
+        if (!streamInfo) {
+          consecutiveNullCount++;
+          console.log(
+            `[worker] #${channel} returned null stream info (${consecutiveNullCount}/${NULL_THRESHOLD}) — verifying channel name and credentials`,
+          );
+
+          if (consecutiveNullCount >= NULL_THRESHOLD) {
+            console.log(
+              `[worker] #${channel} confirmed offline — auto-stopping session ${sessionId}`,
+            );
+            await db.trackSession.update({
+              where: { id: sessionId },
+              data: {
+                status: "COMPLETED",
+                endedAt: new Date(),
+                autoStoppedReason: "Stream went offline",
+              },
+            });
+            if (gameCheckInterval) clearInterval(gameCheckInterval);
+            disconnect();
+          }
+          return;
+        }
+
+        // Stream is live — reset null counter
+        consecutiveNullCount = 0;
+
+        if (streamInfo.game_id !== expectedGameId) {
+          console.log(
+            `[worker] Game changed on #${channel} to "${streamInfo.game_name}" — auto-stopping session ${sessionId}`,
+          );
+          await db.trackSession.update({
+            where: { id: sessionId },
+            data: {
+              status: "COMPLETED",
+              endedAt: new Date(),
+              autoStoppedReason: `Streamer switched to "${streamInfo.game_name}"`,
+            },
+          });
+          if (gameCheckInterval) clearInterval(gameCheckInterval);
+          disconnect();
+        }
+      } catch (err) {
+        console.error("[worker] Game check error:", err);
+        // Don't increment null count on exceptions — only on confirmed null responses
+      }
+    }, 60_000);
+  }
+
+  const disconnect = () => {
     client.disconnect();
+    if (gameCheckInterval) clearInterval(gameCheckInterval);
     activeConnections.delete(sessionId);
     console.log(`[worker] Disconnected from #${channel}`);
-  });
+  };
+
+  activeConnections.set(sessionId, disconnect);
 }
 
 async function poll() {
