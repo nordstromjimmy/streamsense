@@ -282,7 +282,7 @@ export default function DashboardClient({
             },
             {
               label: "Messages captured",
-              value: totalMessages.toLocaleString(),
+              value: totalMessages.toLocaleString("en-US"),
             },
             { label: "Actionable insights", value: totalActionable.toString() },
           ].map((stat) => (

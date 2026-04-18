@@ -50,7 +50,7 @@ export async function POST(
     return NextResponse.json(
       {
         error: limitCheck.reason,
-        usedToday: limitCheck.usedToday,
+        usedToday: limitCheck.usedTotal,
         limit: limitCheck.limit,
         limitReached: true,
       },
@@ -67,7 +67,7 @@ export async function POST(
 
   return NextResponse.json({
     message: "Summarizing...",
-    usedToday: (limitCheck.usedToday ?? 0) + 1,
+    usedToday: (limitCheck.usedTotal ?? 0) + 1,
     limit: limitCheck.limit,
   });
 }

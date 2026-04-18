@@ -12,16 +12,21 @@ export default function LoginPage() {
         padding: "0 24px",
       }}
     >
-      <div
-        className="card"
-        style={{
-          padding: 48,
-          maxWidth: 420,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 32, marginBottom: 20 }}>📡</div>
+      <style>{`
+        .login-card {
+          padding: 48px;
+          max-width: 420px;
+          width: 100%;
+          text-align: center;
+        }
+        @media (max-width: 480px) {
+          .login-card {
+            padding: 28px 20px;
+          }
+        }
+      `}</style>
+
+      <div className="card login-card">
         <h1
           style={{
             fontSize: "1.6rem",

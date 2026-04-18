@@ -83,7 +83,7 @@ export default function LandingPage() {
             src="/logo3.png"
             alt="StreamSense"
             className="nav-title"
-            style={{ height: 120, width: "auto" }}
+            style={{ height: 100, width: "auto" }}
           />
         </Link>
         <Link
@@ -430,7 +430,8 @@ export default function LandingPage() {
               }}
             >
               2 AI summaries free, unlimited session tracking, smart noise
-              filtering included. Built for indie devs who ship fast.
+              filtering included. An easy way to get feedback, built for indie
+              devs.
             </p>
           </div>
           <Link
