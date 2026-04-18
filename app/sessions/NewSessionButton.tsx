@@ -113,15 +113,50 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
         alignItems: "flex-start",
       }}
     >
-      {/* Button row — never moves */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flexWrap: "nowrap",
-        }}
-      >
+      <style>{`
+        .nsb-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: nowrap;
+        }
+        .nsb-input {
+          width: 220px;
+        }
+        .nsb-dropdown {
+          position: absolute;
+          margin-top: 38px;
+          width: 280px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-bright);
+          border-radius: 8px;
+          overflow: hidden;
+          z-index: 50;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .nsb-allchat-label {
+          display: inline;
+        }
+        @media (max-width: 640px) {
+          .nsb-row {
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .nsb-input {
+            width: 160px;
+          }
+          .nsb-dropdown {
+            width: calc(100vw - 40px);
+            max-width: 320px;
+          }
+          .nsb-allchat-label {
+            display: none;
+          }
+        }
+      `}</style>
+
+      {/* Button row */}
+      <div className="nsb-row">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ position: "relative" }}>
             {!selected && (
@@ -152,6 +187,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
               onKeyDown={(e) =>
                 e.key === "Enter" && results.length === 0 && handleStart()
               }
+              className="nsb-input"
               style={{
                 padding: selected ? "8px 12px" : "8px 12px 8px 24px",
                 background: selected ? "var(--accent-dim)" : "var(--bg-card)",
@@ -165,7 +201,6 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
                 fontSize: "0.85rem",
                 fontFamily: "'Space Mono', monospace",
                 outline: "none",
-                width: 220,
                 transition: "all 0.15s",
               }}
             />
@@ -187,19 +222,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
 
           {/* Dropdown */}
           {results.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                marginTop: 38,
-                width: 280,
-                background: "var(--bg-card)",
-                border: "1px solid var(--border-bright)",
-                borderRadius: 8,
-                overflow: "hidden",
-                zIndex: 50,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-              }}
-            >
+            <div className="nsb-dropdown">
               {results.map((ch) => (
                 <div
                   key={ch.broadcaster_login}
@@ -330,7 +353,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
               transition: "background 0.15s",
             }}
           />
-          All Chat
+          <span className="nsb-allchat-label">All Chat</span>
         </button>
 
         {/* Start */}
@@ -370,7 +393,7 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
         </button>
       </div>
 
-      {/* Hint and error — sit below the row, never affect it */}
+      {/* Hint and error — always below row */}
       {allChat && (
         <span
           style={{

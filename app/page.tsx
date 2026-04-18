@@ -52,8 +52,10 @@ export default function LandingPage() {
           .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; padding: 48px 0 40px !important; }
           .steps-grid { grid-template-columns: 1fr !important; }
           .cta-card { flex-direction: column !important; align-items: flex-start !important; }
-          .footer-row { flex-direction: column !important; gap: 12px !important; }
-          .nav-title { font-size: 0.9rem !important; }
+          .footer-inner { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 16px !important; }
+          .footer-links { justify-content: center !important; }
+          .footer-disclaimer { text-align: center !important; }
+          .nav-title { height: 60px !important; } 
         }
       `}</style>
 
@@ -69,16 +71,21 @@ export default function LandingPage() {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <span
-          className="nav-title"
+        <Link
+          href="/"
           style={{
-            fontFamily: "'Space Mono', monospace",
-            fontWeight: 700,
-            fontSize: "1rem",
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
           }}
         >
-          StreamSense
-        </span>
+          <img
+            src="/logo3.png"
+            alt="StreamSense"
+            className="nav-title"
+            style={{ height: 120, width: "auto" }}
+          />
+        </Link>
         <Link
           href="/dashboard"
           style={{
@@ -117,6 +124,7 @@ export default function LandingPage() {
                 border: "1px solid var(--accent-border)",
                 display: "inline-block",
                 marginBottom: 24,
+                fontSize: "14px",
               }}
             >
               For indie game devs

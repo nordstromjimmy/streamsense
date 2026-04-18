@@ -49,7 +49,7 @@ export default function DashboardClient({
   const router = useRouter();
 
   async function handleDeleteGame(e: React.MouseEvent, gameId: string) {
-    e.preventDefault(); // prevent Link navigation
+    e.preventDefault();
     if (
       !confirm("Delete this game and all its sessions? This cannot be undone.")
     )
@@ -62,6 +62,108 @@ export default function DashboardClient({
 
   return (
     <div style={{ minHeight: "100vh" }}>
+      <style>{`
+        .dash-header {
+          border-bottom: 1px solid var(--border);
+          padding: 20px 32px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .dash-header-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: nowrap;
+        }
+        .dash-username {
+          display: inline;
+        }
+        .dash-content {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 40px 32px;
+        }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 40px;
+        }
+        .game-card-inner {
+          padding: 20px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .game-card-right {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .session-row {
+          padding: 14px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .session-row-right {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .session-time {
+          display: inline;
+        }
+        @media (max-width: 768px) {
+          .dash-header {
+            padding: 16px 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+          .dash-header-right {
+            gap: 8px;
+          }
+          .dash-username {
+            display: none;
+          }
+          .dash-content {
+            padding: 24px 16px;
+          }
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 28px;
+          }
+          .game-card-inner {
+            padding: 14px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .game-card-right {
+            width: 100%;
+            justify-content: space-between;
+          }
+          .session-row {
+            padding: 12px 14px;
+            gap: 8px;
+          }
+          .session-row-right {
+            gap: 10px;
+          }
+          .session-time {
+            display: none;
+          }
+        }
+        @media (max-width: 400px) {
+          .stats-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
+
       {showModal && (
         <AddGameModal
           onClose={() => setShowModal(false)}
@@ -70,15 +172,7 @@ export default function DashboardClient({
       )}
 
       {/* Header */}
-      <header
-        style={{
-          borderBottom: "1px solid var(--border)",
-          padding: "20px 32px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <header className="dash-header">
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Link
             href="/"
@@ -96,7 +190,7 @@ export default function DashboardClient({
             Dashboard
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="dash-header-right">
           {user.image && (
             <img
               src={user.image}
@@ -106,11 +200,12 @@ export default function DashboardClient({
                 height: 30,
                 borderRadius: "50%",
                 border: "2px solid var(--border-bright)",
+                flexShrink: 0,
               }}
             />
           )}
           <span
-            className="mono"
+            className="mono dash-username"
             style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
           >
             {user.name}
@@ -127,6 +222,7 @@ export default function DashboardClient({
               fontSize: "0.78rem",
               cursor: "pointer",
               fontFamily: "'Space Mono', monospace",
+              whiteSpace: "nowrap",
             }}
           >
             Sign out
@@ -134,7 +230,7 @@ export default function DashboardClient({
           <button
             onClick={() => setShowModal(true)}
             style={{
-              padding: "8px 18px",
+              padding: "8px 16px",
               background: "var(--accent)",
               color: "#000",
               border: "none",
@@ -143,12 +239,14 @@ export default function DashboardClient({
               fontSize: "0.82rem",
               cursor: "pointer",
               fontFamily: "'Space Mono', monospace",
+              whiteSpace: "nowrap",
             }}
           >
-            Add Game
+            + Add Game
           </button>
         </div>
       </header>
+
       {process.env.NODE_ENV === "development" && (
         <button
           onClick={async () => {
@@ -173,16 +271,9 @@ export default function DashboardClient({
         </button>
       )}
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px" }}>
+      <div className="dash-content">
         {/* Stats */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 16,
-            marginBottom: 40,
-          }}
-        >
+        <div className="stats-grid">
           {[
             { label: "Games tracked", value: games.length.toString() },
             {
@@ -262,93 +353,96 @@ export default function DashboardClient({
               <div
                 className="card"
                 style={{
-                  padding: "20px 24px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
                   opacity: deletingGameId === game.id ? 0.4 : 1,
                   transition: "opacity 0.2s",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div className="game-card-inner">
                   <div
-                    style={{
-                      width: 42,
-                      height: 56,
-                      borderRadius: 6,
-                      background: "var(--border)",
-                      overflow: "hidden",
-                      flexShrink: 0,
-                    }}
+                    style={{ display: "flex", alignItems: "center", gap: 16 }}
                   >
-                    {game.imageUrl ? (
-                      <img
-                        src={game.imageUrl}
-                        alt={game.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
+                    <div
+                      style={{
+                        width: 42,
+                        height: 56,
+                        borderRadius: 6,
+                        background: "var(--border)",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {game.imageUrl ? (
+                        <img
+                          src={game.imageUrl}
+                          alt={game.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 18,
+                          }}
+                        >
+                          🎮
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                        {game.name}
+                      </div>
                       <div
+                        className="mono"
                         style={{
-                          width: "100%",
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 18,
+                          fontSize: "0.7rem",
+                          color: "var(--text-muted)",
                         }}
                       >
-                        🎮
+                        {game._count.trackSessions} session
+                        {game._count.trackSessions !== 1 ? "s" : ""}
+                        {game.trackSessions[0]
+                          ? ` · last tracked ${timeAgo(game.trackSessions[0].startedAt)}`
+                          : " · never tracked"}
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                      {game.name}
                     </div>
-                    <div
-                      className="mono"
-                      style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}
+                  </div>
+                  <div className="game-card-right">
+                    <button
+                      onClick={(e) => handleDeleteGame(e, game.id)}
+                      disabled={deletingGameId === game.id}
+                      style={{
+                        padding: "6px 12px",
+                        background: "transparent",
+                        border: "1px solid var(--border)",
+                        borderRadius: 6,
+                        color: "var(--text-dim)",
+                        cursor: "pointer",
+                        fontSize: "0.75rem",
+                        fontFamily: "'Space Mono', monospace",
+                        transition: "border-color 0.2s, color 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "var(--red)";
+                        e.currentTarget.style.color = "var(--red)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border)";
+                        e.currentTarget.style.color = "var(--text-dim)";
+                      }}
                     >
-                      {game._count.trackSessions} session
-                      {game._count.trackSessions !== 1 ? "s" : ""}
-                      {game.trackSessions[0]
-                        ? ` · last tracked ${timeAgo(game.trackSessions[0].startedAt)}`
-                        : " · never tracked"}
-                    </div>
+                      {deletingGameId === game.id ? "Deleting..." : "Delete"}
+                    </button>
+                    <span style={{ color: "var(--text-dim)" }}>›</span>
                   </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <button
-                    onClick={(e) => handleDeleteGame(e, game.id)}
-                    disabled={deletingGameId === game.id}
-                    style={{
-                      padding: "6px 12px",
-                      background: "transparent",
-                      border: "1px solid var(--border)",
-                      borderRadius: 6,
-                      color: "var(--text-dim)",
-                      cursor: "pointer",
-                      fontSize: "0.75rem",
-                      fontFamily: "'Space Mono', monospace",
-                      transition: "border-color 0.2s, color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--red)";
-                      e.currentTarget.style.color = "var(--red)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border)";
-                      e.currentTarget.style.color = "var(--text-dim)";
-                    }}
-                  >
-                    {deletingGameId === game.id ? "Deleting..." : "Delete"}
-                  </button>
-                  <span style={{ color: "var(--text-dim)" }}>›</span>
                 </div>
               </div>
             </Link>
@@ -377,67 +471,74 @@ export default function DashboardClient({
                   href={`/sessions/${s.id}`}
                   style={{ textDecoration: "none" }}
                 >
-                  <div
-                    className="card"
-                    style={{
-                      padding: "14px 20px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 16 }}
-                    >
-                      <span
-                        className="mono"
+                  <div className="card">
+                    <div className="session-row">
+                      <div
                         style={{
-                          color: "var(--accent)",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          minWidth: 0,
                         }}
                       >
-                        #{s.twitchChannel}
-                      </span>
-                      <span
-                        style={{
-                          color: "var(--text-muted)",
-                          fontSize: "0.82rem",
-                        }}
+                        <span
+                          className="mono"
+                          style={{
+                            color: "var(--accent)",
+                            fontSize: "0.82rem",
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          #{s.twitchChannel}
+                        </span>
+                        <span
+                          style={{
+                            color: "var(--text-muted)",
+                            fontSize: "0.82rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {s.game.name}
+                        </span>
+                      </div>
+                      <div
+                        className="session-row-right"
+                        style={{ flexShrink: 0 }}
                       >
-                        {s.game.name}
-                      </span>
-                    </div>
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 20 }}
-                    >
-                      <span
-                        className="badge"
-                        style={{
-                          background:
-                            s.status === "COMPLETED"
-                              ? "var(--green-dim)"
-                              : s.status === "ACTIVE"
-                                ? "var(--accent-dim)"
-                                : "var(--red-dim)",
-                          color:
-                            s.status === "COMPLETED"
-                              ? "var(--green)"
-                              : s.status === "ACTIVE"
-                                ? "var(--accent)"
-                                : "var(--red)",
-                          border: `1px solid ${s.status === "COMPLETED" ? "rgba(62,255,160,0.15)" : s.status === "ACTIVE" ? "var(--accent-border)" : "rgba(255,77,106,0.2)"}`,
-                        }}
-                      >
-                        {s.status.charAt(0) + s.status.slice(1).toLowerCase()}
-                      </span>
-                      <span
-                        className="mono"
-                        style={{ color: "var(--text-dim)", fontSize: "0.7rem" }}
-                      >
-                        {timeAgo(s.startedAt)}
-                      </span>
-                      <span style={{ color: "var(--text-dim)" }}>›</span>
+                        <span
+                          className="badge"
+                          style={{
+                            background:
+                              s.status === "COMPLETED"
+                                ? "var(--green-dim)"
+                                : s.status === "ACTIVE"
+                                  ? "var(--accent-dim)"
+                                  : "var(--red-dim)",
+                            color:
+                              s.status === "COMPLETED"
+                                ? "var(--green)"
+                                : s.status === "ACTIVE"
+                                  ? "var(--accent)"
+                                  : "var(--red)",
+                            border: `1px solid ${s.status === "COMPLETED" ? "rgba(62,255,160,0.15)" : s.status === "ACTIVE" ? "var(--accent-border)" : "rgba(255,77,106,0.2)"}`,
+                          }}
+                        >
+                          {s.status.charAt(0) + s.status.slice(1).toLowerCase()}
+                        </span>
+                        <span
+                          className="mono session-time"
+                          style={{
+                            color: "var(--text-dim)",
+                            fontSize: "0.7rem",
+                          }}
+                        >
+                          {timeAgo(s.startedAt)}
+                        </span>
+                        <span style={{ color: "var(--text-dim)" }}>›</span>
+                      </div>
                     </div>
                   </div>
                 </Link>
