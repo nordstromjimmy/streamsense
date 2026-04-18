@@ -149,6 +149,29 @@ export default function DashboardClient({
           </button>
         </div>
       </header>
+      {process.env.NODE_ENV === "development" && (
+        <button
+          onClick={async () => {
+            const res = await fetch("/api/dev/toggle-pro", { method: "POST" });
+            const data = await res.json();
+            alert(`Pro: ${data.isPro}`);
+            router.refresh();
+          }}
+          style={{
+            padding: "7px 14px",
+            background: "transparent",
+            color: "var(--purple)",
+            border: "1px dashed var(--purple)",
+            borderRadius: 8,
+            fontWeight: 600,
+            fontSize: "0.75rem",
+            cursor: "pointer",
+            fontFamily: "'Space Mono', monospace",
+          }}
+        >
+          DEV: Toggle Pro
+        </button>
+      )}
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px" }}>
         {/* Stats */}

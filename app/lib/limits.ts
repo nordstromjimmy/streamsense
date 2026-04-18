@@ -1,21 +1,20 @@
 import { db } from "./db";
 
-// Free tier limits
-/* const FREE_SUMMARIES_PER_DAY = 3;
-const FREE_COOLDOWN_MINUTES = 30;
+// LIVE LIMITS
+/* const FREE_SUMMARY_LIMIT = 2; // lifetime total for free users
 const MIN_MESSAGES_TO_SUMMARIZE = 20;
 const MIN_SESSION_DURATION_MINUTES = 5; */
 
-// dev limits
-const FREE_SUMMARIES_PER_DAY = 10;
-const FREE_COOLDOWN_MINUTES = 0;
+// DEV LIMITS
+
+const FREE_SUMMARY_LIMIT = 2;
 const MIN_MESSAGES_TO_SUMMARIZE = 1;
 const MIN_SESSION_DURATION_MINUTES = 0;
 
 export interface LimitCheck {
   allowed: boolean;
   reason?: string;
-  usedToday?: number;
+  usedTotal?: number;
   limit?: number;
 }
 
@@ -28,51 +27,23 @@ export async function checkSummaryLimits(
     select: { isPro: true },
   });
 
-  // Pro users have no limits
   if (user?.isPro) return { allowed: true };
 
-  const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-
-  // Check daily limit
-  const usedToday = await db.summaryUsage.count({
-    where: {
-      userId,
-      createdAt: { gte: startOfDay },
-    },
+  // Lifetime total
+  const usedTotal = await db.summaryUsage.count({
+    where: { userId },
   });
 
-  if (usedToday >= FREE_SUMMARIES_PER_DAY) {
+  if (usedTotal >= FREE_SUMMARY_LIMIT) {
     return {
       allowed: false,
-      reason: `You've used all ${FREE_SUMMARIES_PER_DAY} free summaries for today. Resets at midnight.`,
-      usedToday,
-      limit: FREE_SUMMARIES_PER_DAY,
+      reason: `You've used all ${FREE_SUMMARY_LIMIT} free summaries. Upgrade to Pro for unlimited summaries.`,
+      usedTotal,
+      limit: FREE_SUMMARY_LIMIT,
     };
   }
 
-  // Check cooldown — when was the last summary?
-  const lastUsage = await db.summaryUsage.findFirst({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (lastUsage) {
-    const minutesSinceLast =
-      (now.getTime() - lastUsage.createdAt.getTime()) / 1000 / 60;
-    if (minutesSinceLast < FREE_COOLDOWN_MINUTES) {
-      const waitMinutes = Math.ceil(FREE_COOLDOWN_MINUTES - minutesSinceLast);
-      return {
-        allowed: false,
-        reason: `Please wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""} before generating another summary.`,
-        usedToday,
-        limit: FREE_SUMMARIES_PER_DAY,
-      };
-    }
-  }
-
-  // Check minimum messages
+  // Minimum messages check
   const messageCount = await db.chatMessage.count({
     where: { sessionId },
   });
@@ -81,12 +52,12 @@ export async function checkSummaryLimits(
     return {
       allowed: false,
       reason: `Not enough messages to summarize. Need at least ${MIN_MESSAGES_TO_SUMMARIZE}, only ${messageCount} captured.`,
-      usedToday,
-      limit: FREE_SUMMARIES_PER_DAY,
+      usedTotal,
+      limit: FREE_SUMMARY_LIMIT,
     };
   }
 
-  // Check minimum session duration
+  // Minimum session duration check
   const session = await db.trackSession.findUnique({
     where: { id: sessionId },
     select: { startedAt: true },
@@ -94,21 +65,21 @@ export async function checkSummaryLimits(
 
   if (session) {
     const durationMinutes =
-      (now.getTime() - session.startedAt.getTime()) / 1000 / 60;
+      (Date.now() - session.startedAt.getTime()) / 1000 / 60;
     if (durationMinutes < MIN_SESSION_DURATION_MINUTES) {
       const waitMinutes = Math.ceil(
         MIN_SESSION_DURATION_MINUTES - durationMinutes,
       );
       return {
         allowed: false,
-        reason: `Session must run for at least ${MIN_SESSION_DURATION_MINUTES} minutes before summarizing. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
-        usedToday,
-        limit: FREE_SUMMARIES_PER_DAY,
+        reason: `Session must run for at least ${MIN_SESSION_DURATION_MINUTES} minutes. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
+        usedTotal,
+        limit: FREE_SUMMARY_LIMIT,
       };
     }
   }
 
-  return { allowed: true, usedToday, limit: FREE_SUMMARIES_PER_DAY };
+  return { allowed: true, usedTotal, limit: FREE_SUMMARY_LIMIT };
 }
 
 export async function recordSummaryUsage(userId: string, sessionId: string) {

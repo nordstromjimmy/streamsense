@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/app/lib/db";
 
+const FREE_SUMMARY_LIMIT = 2;
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -13,20 +15,14 @@ export async function GET() {
     select: { isPro: true },
   });
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const usedToday = await db.summaryUsage.count({
-    where: {
-      userId: session.user.id,
-      createdAt: { gte: startOfDay },
-    },
+  const usedTotal = await db.summaryUsage.count({
+    where: { userId: session.user.id },
   });
 
   return NextResponse.json({
     isPro: user?.isPro ?? false,
-    usedToday,
-    limit: 3,
-    remaining: Math.max(0, 3 - usedToday),
+    usedTotal,
+    limit: FREE_SUMMARY_LIMIT,
+    remaining: Math.max(0, FREE_SUMMARY_LIMIT - usedTotal),
   });
 }

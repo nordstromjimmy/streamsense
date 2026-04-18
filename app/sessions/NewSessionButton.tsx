@@ -108,263 +108,272 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
+        gap: 6,
         alignItems: "flex-start",
-        gap: 8,
-        flexWrap: "wrap",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {/* Input */}
-        <div style={{ position: "relative" }}>
-          {!selected && (
-            <span
+      {/* Button row — never moves */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "nowrap",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ position: "relative" }}>
+            {!selected && (
+              <span
+                style={{
+                  position: "absolute",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--text-muted)",
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: "0.85rem",
+                  pointerEvents: "none",
+                }}
+              >
+                #
+              </span>
+            )}
+            <input
+              autoFocus
+              type="text"
+              placeholder="search live channels..."
+              value={channel}
+              onChange={(e) => {
+                setChannel(e.target.value);
+                setSelected(null);
+              }}
+              onKeyDown={(e) =>
+                e.key === "Enter" && results.length === 0 && handleStart()
+              }
               style={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "var(--text-muted)",
-                fontFamily: "'Space Mono', monospace",
+                padding: selected ? "8px 12px" : "8px 12px 8px 24px",
+                background: selected ? "var(--accent-dim)" : "var(--bg-card)",
+                border: error
+                  ? "1px solid var(--red)"
+                  : selected
+                    ? "1px solid var(--accent-border)"
+                    : "1px solid var(--border-bright)",
+                borderRadius: 8,
+                color: selected ? "var(--accent)" : "var(--text)",
                 fontSize: "0.85rem",
-                pointerEvents: "none",
+                fontFamily: "'Space Mono', monospace",
+                outline: "none",
+                width: 220,
+                transition: "all 0.15s",
               }}
-            >
-              #
-            </span>
-          )}
-          <input
-            autoFocus
-            type="text"
-            placeholder="search live channels..."
-            value={channel}
-            onChange={(e) => {
-              setChannel(e.target.value);
-              setSelected(null);
-            }}
-            onKeyDown={(e) =>
-              e.key === "Enter" && results.length === 0 && handleStart()
-            }
-            style={{
-              padding: selected ? "8px 12px" : "8px 12px 8px 24px",
-              background: selected ? "var(--accent-dim)" : "var(--bg-card)",
-              border: error
-                ? "1px solid var(--red)"
-                : selected
-                  ? "1px solid var(--accent-border)"
-                  : "1px solid var(--border-bright)",
-              borderRadius: 8,
-              color: selected ? "var(--accent)" : "var(--text)",
-              fontSize: "0.85rem",
-              fontFamily: "'Space Mono', monospace",
-              outline: "none",
-              width: 220,
-              transition: "all 0.15s",
-            }}
-          />
-          {searching && (
-            <span
+            />
+            {searching && (
+              <span
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "0.68rem",
+                  color: "var(--text-dim)",
+                }}
+              >
+                searching...
+              </span>
+            )}
+          </div>
+
+          {/* Dropdown */}
+          {results.length > 0 && (
+            <div
               style={{
                 position: "absolute",
-                right: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "0.68rem",
-                color: "var(--text-dim)",
+                marginTop: 38,
+                width: 280,
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-bright)",
+                borderRadius: 8,
+                overflow: "hidden",
+                zIndex: 50,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
               }}
             >
-              searching...
-            </span>
+              {results.map((ch) => (
+                <div
+                  key={ch.broadcaster_login}
+                  onClick={() => handleSelect(ch)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid var(--border)",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--bg-card-hover)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                >
+                  {ch.thumbnail_url ? (
+                    <img
+                      src={ch.thumbnail_url}
+                      alt={ch.display_name}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: "var(--border)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "0.82rem",
+                        fontFamily: "'Space Mono', monospace",
+                        color: "var(--accent)",
+                      }}
+                    >
+                      #{ch.broadcaster_login}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.72rem",
+                        color: "var(--text-muted)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {ch.game_name || "No category"}
+                    </div>
+                  </div>
+                  <div style={{ marginLeft: "auto", flexShrink: 0 }}>
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        color: "var(--green)",
+                        fontFamily: "'Space Mono', monospace",
+                        background: "var(--green-dim)",
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      LIVE
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "0.7rem",
+                  color: "var(--text-dim)",
+                  fontFamily: "'Space Mono', monospace",
+                }}
+              >
+                Only showing live channels
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Dropdown results */}
-        {results.length > 0 && (
-          <div
+        {/* All Chat toggle */}
+        <button
+          onClick={() => setAllChat((v) => !v)}
+          title="All Chat captures every message without filtering. Best for smaller streams."
+          style={{
+            padding: "8px 12px",
+            background: allChat ? "var(--accent-dim)" : "transparent",
+            border: allChat
+              ? "1px solid var(--accent-border)"
+              : "1px solid var(--border)",
+            borderRadius: 8,
+            color: allChat ? "var(--accent)" : "var(--text-muted)",
+            cursor: "pointer",
+            fontSize: "0.78rem",
+            fontFamily: "'Space Mono', monospace",
+            fontWeight: allChat ? 700 : 400,
+            transition: "all 0.15s",
+            whiteSpace: "nowrap",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <span
             style={{
-              position: "absolute",
-              marginTop: 38,
-              width: 280,
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-bright)",
-              borderRadius: 8,
-              overflow: "hidden",
-              zIndex: 50,
-              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+              width: 12,
+              height: 12,
+              borderRadius: "50%",
+              background: allChat ? "var(--accent)" : "var(--border-bright)",
+              display: "inline-block",
+              flexShrink: 0,
+              transition: "background 0.15s",
             }}
-          >
-            {results.map((ch) => (
-              <div
-                key={ch.broadcaster_login}
-                onClick={() => handleSelect(ch)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid var(--border)",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--bg-card-hover)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
-              >
-                {ch.thumbnail_url ? (
-                  <img
-                    src={ch.thumbnail_url}
-                    alt={ch.display_name}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      background: "var(--border)",
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "0.82rem",
-                      fontFamily: "'Space Mono', monospace",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    #{ch.broadcaster_login}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.72rem",
-                      color: "var(--text-muted)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {ch.game_name || "No category"}
-                  </div>
-                </div>
-                <div style={{ marginLeft: "auto", flexShrink: 0 }}>
-                  <span
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "var(--green)",
-                      fontFamily: "'Space Mono', monospace",
-                      background: "var(--green-dim)",
-                      padding: "2px 6px",
-                      borderRadius: 4,
-                    }}
-                  >
-                    LIVE
-                  </span>
-                </div>
-              </div>
-            ))}
-            <div
-              style={{
-                padding: "8px 14px",
-                fontSize: "0.7rem",
-                color: "var(--text-dim)",
-                fontFamily: "'Space Mono', monospace",
-              }}
-            >
-              Only showing live channels
-            </div>
-          </div>
-        )}
+          />
+          All Chat
+        </button>
+
+        {/* Start */}
+        <button
+          onClick={handleStart}
+          disabled={loading}
+          style={{
+            padding: "8px 16px",
+            background: "var(--accent)",
+            color: "#000",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: 700,
+            fontSize: "0.82rem",
+            cursor: "pointer",
+            fontFamily: "'Space Mono', monospace",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? "Starting..." : "Start"}
+        </button>
+
+        {/* Cancel */}
+        <button
+          onClick={handleReset}
+          style={{
+            padding: "8px 12px",
+            background: "transparent",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            color: "var(--text-muted)",
+            cursor: "pointer",
+            fontSize: "0.82rem",
+          }}
+        >
+          Cancel
+        </button>
       </div>
 
-      {/* All Chat toggle */}
-      <button
-        onClick={() => setAllChat((v) => !v)}
-        title="All Chat captures every message without filtering. Best for smaller streams."
-        style={{
-          padding: "8px 12px",
-          background: allChat ? "var(--accent-dim)" : "transparent",
-          border: allChat
-            ? "1px solid var(--accent-border)"
-            : "1px solid var(--border)",
-          borderRadius: 8,
-          color: allChat ? "var(--accent)" : "var(--text-muted)",
-          cursor: "pointer",
-          fontSize: "0.78rem",
-          fontFamily: "'Space Mono', monospace",
-          fontWeight: allChat ? 700 : 400,
-          transition: "all 0.15s",
-          whiteSpace: "nowrap",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}
-      >
-        <span
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            background: allChat ? "var(--accent)" : "var(--border-bright)",
-            display: "inline-block",
-            flexShrink: 0,
-            transition: "background 0.15s",
-          }}
-        />
-        All Chat
-      </button>
-
-      {/* Start */}
-      <button
-        onClick={handleStart}
-        disabled={loading}
-        style={{
-          padding: "8px 16px",
-          background: "var(--accent)",
-          color: "#000",
-          border: "none",
-          borderRadius: 8,
-          fontWeight: 700,
-          fontSize: "0.82rem",
-          cursor: "pointer",
-          fontFamily: "'Space Mono', monospace",
-          opacity: loading ? 0.6 : 1,
-        }}
-      >
-        {loading ? "Starting..." : "Start →"}
-      </button>
-
-      {/* Cancel */}
-      <button
-        onClick={handleReset}
-        style={{
-          padding: "8px 12px",
-          background: "transparent",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          color: "var(--text-muted)",
-          cursor: "pointer",
-          fontSize: "0.82rem",
-        }}
-      >
-        Cancel
-      </button>
-
+      {/* Hint and error — sit below the row, never affect it */}
       {allChat && (
         <span
           style={{
-            width: "100%",
             fontSize: "0.72rem",
             color: "var(--text-muted)",
             fontFamily: "'Space Mono', monospace",

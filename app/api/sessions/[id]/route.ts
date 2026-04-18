@@ -45,39 +45,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Session not active" }, { status: 400 });
   }
 
-  // Check limits before doing anything
-  const limitCheck = await checkSummaryLimits(authSession.user.id, id);
-  if (!limitCheck.allowed) {
-    return NextResponse.json(
-      {
-        error: limitCheck.reason,
-        usedToday: limitCheck.usedToday,
-        limit: limitCheck.limit,
-        limitReached: true,
-      },
-      { status: 429 },
-    );
-  }
-
-  // Mark as completed immediately
   await db.trackSession.update({
     where: { id },
     data: { status: "COMPLETED", endedAt: new Date() },
   });
 
-  // Record usage
-  await recordSummaryUsage(authSession.user.id, id);
-
-  // Fire summarization in background
-  summarizeSession(id).catch(async (err) => {
-    console.error("Summarization failed:", err);
-  });
-
-  return NextResponse.json({
-    message: "Summarizing...",
-    usedToday: (limitCheck.usedToday ?? 0) + 1,
-    limit: limitCheck.limit,
-  });
+  return NextResponse.json({ message: "Session stopped" });
 }
 
 export async function DELETE(

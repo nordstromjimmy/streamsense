@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import UpgradeModal from "@/app/components/UpgradeModal";
 
 interface Message {
   id: string;
@@ -40,35 +41,6 @@ function parseSummaryField(val: string): string[] {
     return [];
   }
 }
-
-/* function AutoRefresh({
-  sessionId,
-  onSummary,
-}: {
-  sessionId: string;
-  onSummary: (summary: Summary) => void;
-}) {
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/sessions/${sessionId}/messages`);
-      const data = await res.json();
-      if (data.summary) {
-        onSummary(data.summary);
-        clearInterval(interval);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [sessionId, onSummary]);
-
-  return (
-    <span
-      className="mono"
-      style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}
-    >
-      checking...
-    </span>
-  );
-} */
 
 function generateMarkdown(
   channel: string,
@@ -144,9 +116,13 @@ export default function SessionLiveView({ session }: Props) {
 
   const [limitError, setLimitError] = useState<string | null>(null);
   const [usageInfo, setUsageInfo] = useState<{
-    usedToday: number;
+    usedTotal: number;
     limit: number;
+    remaining: number;
+    isPro: boolean;
   } | null>(null);
+
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Poll for new messages
   useEffect(() => {
@@ -209,29 +185,27 @@ export default function SessionLiveView({ session }: Props) {
     fetch("/api/sessions/usage")
       .then((r) => r.json())
       .then((data) => {
-        if (!data.isPro) {
-          setUsageInfo({ usedToday: data.usedToday, limit: data.limit });
-        }
+        setUsageInfo({
+          usedTotal: data.usedTotal,
+          limit: data.limit,
+          remaining: data.remaining,
+          isPro: data.isPro,
+        });
       });
   }, []);
 
   async function handleStop() {
     setSummarizing(true);
     setLimitError(null);
-    // Just stop — don't summarize yet
     const res = await fetch(`/api/sessions/${session.id}`, { method: "PATCH" });
-    const data = await res.json();
 
-    if (res.status === 429) {
-      setLimitError(data.error);
+    if (!res.ok) {
+      setLimitError("Failed to stop session. Try again.");
       setSummarizing(false);
       return;
     }
 
     setStatus("COMPLETED");
-    if (data.usedToday !== undefined) {
-      setUsageInfo({ usedToday: data.usedToday, limit: data.limit });
-    }
     setSummarizing(false);
   }
 
@@ -245,12 +219,11 @@ export default function SessionLiveView({ session }: Props) {
       const data = await res.json();
 
       if (res.status === 429) {
-        setLimitError(data.error);
         setSummarizing(false);
+        setShowUpgrade(true); // show modal instead of inline error
         return;
       }
 
-      // Poll until summary appears
       const interval = setInterval(async () => {
         const r = await fetch(`/api/sessions/${session.id}/messages`);
         const d = await r.json();
@@ -380,6 +353,7 @@ export default function SessionLiveView({ session }: Props) {
         overflow: "hidden",
       }}
     >
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       {/* Header */}
       <header
         style={{
@@ -435,13 +409,20 @@ export default function SessionLiveView({ session }: Props) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Usage indicator */}
-          {usageInfo && status === "ACTIVE" && (
+          {usageInfo && status !== "COMPLETED" && !usageInfo.isPro && (
             <span
               className="mono"
-              style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}
+              style={{
+                fontSize: "0.72rem",
+                color:
+                  usageInfo.remaining === 0
+                    ? "var(--red)"
+                    : usageInfo.remaining === 1
+                      ? "var(--accent)"
+                      : "var(--text-muted)",
+              }}
             >
-              {usageInfo.limit - usageInfo.usedToday}/{usageInfo.limit}{" "}
-              summaries left today
+              {usageInfo.remaining}/{usageInfo.limit} summaries remaining
             </span>
           )}
 
@@ -624,7 +605,7 @@ export default function SessionLiveView({ session }: Props) {
               className="mono"
               style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}
             >
-              {messages.length} messages captured
+              Showing last {messages.length} messages
             </span>
             {status === "ACTIVE" && (
               <span
@@ -933,39 +914,77 @@ export default function SessionLiveView({ session }: Props) {
               color: "var(--text-muted)",
             }}
           >
-            <div style={{ fontSize: 24 }}>✅</div>
-            <p style={{ fontSize: "0.85rem", textAlign: "center", margin: 0 }}>
-              Session complete — ready to summarize.
-            </p>
-            <p
-              style={{
-                fontSize: "0.78rem",
-                textAlign: "center",
-                color: "var(--text-dim)",
-                margin: 0,
-              }}
-            >
-              {usageInfo &&
-                `${usageInfo.limit - usageInfo.usedToday} of ${usageInfo.limit} summaries remaining today`}
-            </p>
-            <button
-              onClick={handleSummarize}
-              disabled={summarizing}
-              style={{
-                padding: "10px 24px",
-                background: "var(--accent)",
-                color: "#000",
-                border: "none",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: "0.88rem",
-                cursor: summarizing ? "not-allowed" : "pointer",
-                fontFamily: "'Space Mono', monospace",
-                opacity: summarizing ? 0.6 : 1,
-              }}
-            >
-              {summarizing ? "Generating..." : "✦ Summarize Session"}
-            </button>
+            {usageInfo?.remaining === 0 && !usageInfo?.isPro ? (
+              <>
+                <div style={{ fontSize: 24 }}>⚡</div>
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    textAlign: "center",
+                    margin: 0,
+                  }}
+                >
+                  You've used all your free summaries.
+                </p>
+                <button
+                  onClick={() => setShowUpgrade(true)}
+                  style={{
+                    padding: "10px 24px",
+                    background: "var(--accent)",
+                    color: "#000",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    cursor: "pointer",
+                    fontFamily: "'Space Mono', monospace",
+                  }}
+                >
+                  Upgrade to Pro
+                </button>
+              </>
+            ) : (
+              <>
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    textAlign: "center",
+                    margin: 0,
+                  }}
+                >
+                  Session complete — ready to summarize.
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.78rem",
+                    textAlign: "center",
+                    color: "var(--text-dim)",
+                    margin: 0,
+                  }}
+                >
+                  {usageInfo &&
+                    `${usageInfo.remaining} of ${usageInfo.limit} free summaries remaining`}
+                </p>
+                <button
+                  onClick={handleSummarize}
+                  disabled={summarizing}
+                  style={{
+                    padding: "10px 24px",
+                    background: "var(--accent)",
+                    color: "#000",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    cursor: summarizing ? "not-allowed" : "pointer",
+                    fontFamily: "'Space Mono', monospace",
+                    opacity: summarizing ? 0.6 : 1,
+                  }}
+                >
+                  {summarizing ? "Generating..." : "Summarize Session"}
+                </button>
+              </>
+            )}
             {limitError && (
               <p
                 style={{
