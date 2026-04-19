@@ -196,7 +196,6 @@ export default function SessionLiveView({ session }: Props) {
   }, []);
 
   async function handleStop() {
-    // Check message count before stopping
     if (messages.length < 20) {
       setLimitError(
         `Not enough messages to summarize. Need at least 20, only ${messages.length} captured.`,
@@ -204,21 +203,13 @@ export default function SessionLiveView({ session }: Props) {
       return;
     }
 
-    // Check session duration
     const durationMinutes =
       (Date.now() - new Date(session.startedAt).getTime()) / 1000 / 60;
     if (durationMinutes < 3) {
-      // ← changed from 5
       const waitMinutes = Math.ceil(3 - durationMinutes);
       setLimitError(
         `Session must run for at least 3 minutes. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
       );
-      return;
-    }
-
-    // Check summary limit
-    if (usageInfo && usageInfo.remaining === 0 && !usageInfo.isPro) {
-      setShowUpgrade(true);
       return;
     }
 
