@@ -4,8 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 import Stripe from "stripe";
 
-export const config = { api: { bodyParser: false } };
-
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
