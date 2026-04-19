@@ -1079,7 +1079,7 @@ export default function SessionLiveView({ session }: Props) {
                 </button>
               </>
             )}
-            {limitError && (
+            {/*             {limitError && (
               <p
                 style={{
                   fontSize: "0.82rem",
@@ -1090,7 +1090,7 @@ export default function SessionLiveView({ session }: Props) {
               >
                 {limitError}
               </p>
-            )}
+            )} */}
           </div>
         )}
       </div>

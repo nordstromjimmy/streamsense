@@ -319,42 +319,80 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
           )}
         </div>
 
-        {/* All Chat toggle */}
-        <button
-          onClick={() => setAllChat((v) => !v)}
-          title="All Chat captures every message without filtering. Best for smaller streams."
-          style={{
-            padding: "8px 12px",
-            background: allChat ? "var(--accent-dim)" : "transparent",
-            border: allChat
-              ? "1px solid var(--accent-border)"
-              : "1px solid var(--border)",
-            borderRadius: 8,
-            color: allChat ? "var(--accent)" : "var(--text-muted)",
-            cursor: "pointer",
-            fontSize: "0.78rem",
-            fontFamily: "'Space Mono', monospace",
-            fontWeight: allChat ? 700 : 400,
-            transition: "all 0.15s",
-            whiteSpace: "nowrap",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span
+        {/* Filter mode toggles */}
+        <div style={{ display: "flex", gap: 4 }}>
+          <button
+            onClick={() => setAllChat(false)}
+            title="Filters out noise, spam, and off-topic messages. Best for most streams."
             style={{
-              width: 12,
-              height: 12,
-              borderRadius: "50%",
-              background: allChat ? "var(--accent)" : "var(--border-bright)",
-              display: "inline-block",
-              flexShrink: 0,
-              transition: "background 0.15s",
+              padding: "8px 12px",
+              background: !allChat ? "var(--accent-dim)" : "transparent",
+              border: !allChat
+                ? "1px solid var(--accent-border)"
+                : "1px solid var(--border)",
+              borderRadius: "8px 0 0 8px",
+              color: !allChat ? "var(--accent)" : "var(--text-muted)",
+              cursor: "pointer",
+              fontSize: "0.78rem",
+              fontFamily: "'Space Mono', monospace",
+              fontWeight: !allChat ? 700 : 400,
+              transition: "all 0.15s",
+              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
-          />
-          <span className="nsb-allchat-label">All Chat</span>
-        </button>
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: !allChat ? "var(--accent)" : "var(--border-bright)",
+                display: "inline-block",
+                flexShrink: 0,
+                transition: "background 0.15s",
+              }}
+            />
+            <span className="nsb-allchat-label">Filtered</span>
+          </button>
+          <button
+            onClick={() => setAllChat(true)}
+            title="Captures every message without filtering. Best for smaller streams."
+            style={{
+              padding: "8px 12px",
+              background: allChat ? "var(--accent-dim)" : "transparent",
+              border: allChat
+                ? "1px solid var(--accent-border)"
+                : "1px solid var(--border)",
+              borderRadius: "0 8px 8px 0",
+              color: allChat ? "var(--accent)" : "var(--text-muted)",
+              cursor: "pointer",
+              fontSize: "0.78rem",
+              fontFamily: "'Space Mono', monospace",
+              fontWeight: allChat ? 700 : 400,
+              transition: "all 0.15s",
+              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginLeft: "-1px", // overlap borders
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: allChat ? "var(--accent)" : "var(--border-bright)",
+                display: "inline-block",
+                flexShrink: 0,
+                transition: "background 0.15s",
+              }}
+            />
+            <span className="nsb-allchat-label">Unfiltered</span>
+          </button>
+        </div>
 
         {/* Start */}
         <button
@@ -394,17 +432,17 @@ export default function NewSessionButton({ gameId }: { gameId: string }) {
       </div>
 
       {/* Hint and error — always below row */}
-      {allChat && (
-        <span
-          style={{
-            fontSize: "0.72rem",
-            color: "var(--text-muted)",
-            fontFamily: "'Space Mono', monospace",
-          }}
-        >
-          All messages captured — best for small streams
-        </span>
-      )}
+      <span
+        style={{
+          fontSize: "0.72rem",
+          color: "var(--text-muted)",
+          fontFamily: "'Space Mono', monospace",
+        }}
+      >
+        {allChat
+          ? "All messages captured — best for streamers with less viewers"
+          : "Filters spam, bots, and off-topic messages — recommended"}
+      </span>
       {error && (
         <span style={{ fontSize: "0.78rem", color: "var(--red)" }}>
           {error}
