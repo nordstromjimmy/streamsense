@@ -154,9 +154,9 @@ export default function UpgradeModal({ onClose }: Props) {
             </div>
             {[
               { text: "2 AI summaries", ok: true },
-              { text: "Unlimited tracking", ok: true },
+              { text: "Limited sessions", ok: true },
               { text: "Smart filtering", ok: true },
-              { text: "Unlimited summaries", ok: false },
+              { text: "Basic features", ok: true },
             ].map((item) => (
               <div
                 key={item.text}
@@ -203,9 +203,10 @@ export default function UpgradeModal({ onClose }: Props) {
             </div>
             {[
               { text: "Unlimited summaries", ok: true },
-              { text: "Unlimited tracking", ok: true },
+              { text: "Unlimited Sessions", ok: true },
               { text: "Smart filtering", ok: true },
               { text: "Priority support", ok: true },
+              { text: "Access to new features", ok: true },
             ].map((item) => (
               <div
                 key={item.text}
