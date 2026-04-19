@@ -207,10 +207,11 @@ export default function SessionLiveView({ session }: Props) {
     // Check session duration
     const durationMinutes =
       (Date.now() - new Date(session.startedAt).getTime()) / 1000 / 60;
-    if (durationMinutes < 5) {
-      const waitMinutes = Math.ceil(5 - durationMinutes);
+    if (durationMinutes < 3) {
+      // ← changed from 5
+      const waitMinutes = Math.ceil(3 - durationMinutes);
       setLimitError(
-        `Session must run for at least 5 minutes. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
+        `Session must run for at least 3 minutes. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
       );
       return;
     }
@@ -714,6 +715,27 @@ export default function SessionLiveView({ session }: Props) {
             >
               Showing {messages.length} messages
             </span>
+            {status === "ACTIVE" &&
+              usageInfo &&
+              !usageInfo.isPro &&
+              (() => {
+                const elapsed =
+                  (Date.now() - new Date(session.startedAt).getTime()) /
+                  1000 /
+                  60;
+                const remaining = Math.ceil(10 - elapsed);
+                if (remaining <= 3 && remaining > 0) {
+                  return (
+                    <span
+                      className="mono"
+                      style={{ fontSize: "0.72rem", color: "var(--accent)" }}
+                    >
+                      ⚡ {remaining} min left
+                    </span>
+                  );
+                }
+                return null;
+              })()}
             {status === "ACTIVE" && (
               <span
                 style={{

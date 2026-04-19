@@ -6,6 +6,7 @@ dotenv.config({
 import { Client, ChatUserstate } from "tmi.js";
 import { PrismaClient } from "@prisma/client";
 import { getStreamInfo } from "./app/lib/twitch";
+import { MAX_FREE_SESSION_DURATION_MINUTES } from "./app/lib/limits";
 
 const db = new PrismaClient();
 
@@ -249,9 +250,52 @@ async function connectToSession(sessionId: string, channel: string) {
     }, 60_000);
   }
 
+  // Auto-stop free users after MAX_FREE_SESSION_DURATION_MINUTES
+  const durationCheckInterval = setInterval(async () => {
+    try {
+      const current = await db.trackSession.findUnique({
+        where: { id: sessionId },
+        include: { game: { include: { user: { select: { isPro: true } } } } },
+      });
+
+      if (!current || current.status !== "ACTIVE") {
+        clearInterval(durationCheckInterval);
+        return;
+      }
+
+      // Skip if user is Pro
+      if (current.game.user.isPro) {
+        clearInterval(durationCheckInterval);
+        return;
+      }
+
+      const durationMinutes =
+        (Date.now() - current.startedAt.getTime()) / 1000 / 60;
+
+      if (durationMinutes >= MAX_FREE_SESSION_DURATION_MINUTES) {
+        console.log(
+          `[worker] Free user session ${sessionId} reached ${MAX_FREE_SESSION_DURATION_MINUTES} min limit — auto-stopping`,
+        );
+        await db.trackSession.update({
+          where: { id: sessionId },
+          data: {
+            status: "COMPLETED",
+            endedAt: new Date(),
+            autoStoppedReason: `Free plan session limit reached (${MAX_FREE_SESSION_DURATION_MINUTES} minutes)`,
+          },
+        });
+        clearInterval(durationCheckInterval);
+        disconnect();
+      }
+    } catch (err) {
+      console.error("[worker] Duration check error:", err);
+    }
+  }, 60_000); // check every minute
+
   const disconnect = () => {
     client.disconnect();
     if (gameCheckInterval) clearInterval(gameCheckInterval);
+    clearInterval(durationCheckInterval);
     activeConnections.delete(sessionId);
     console.log(`[worker] Disconnected from #${channel}`);
   };
