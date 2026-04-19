@@ -5,6 +5,7 @@ import { db } from "./app/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
+  trustHost: true,
   providers: [
     Twitch({
       clientId: process.env.TWITCH_CLIENT_ID!,
