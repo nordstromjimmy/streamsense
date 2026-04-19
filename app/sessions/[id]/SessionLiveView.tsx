@@ -178,6 +178,23 @@ export default function SessionLiveView({ session }: Props) {
       });
   }, []);
 
+  // Extract the fetch into a reusable function
+  async function fetchUsage() {
+    const res = await fetch("/api/sessions/usage");
+    const data = await res.json();
+    setUsageInfo({
+      usedTotal: data.usedTotal,
+      limit: data.limit,
+      remaining: data.remaining,
+      isPro: data.isPro,
+    });
+  }
+
+  // Replace the useEffect that fetches usage
+  useEffect(() => {
+    fetchUsage();
+  }, []);
+
   async function handleStop() {
     setSummarizing(true);
     setLimitError(null);
@@ -210,6 +227,7 @@ export default function SessionLiveView({ session }: Props) {
           setSummary(d.summary);
           setSummarizing(false);
           clearInterval(interval);
+          fetchUsage();
         }
       }, 2000);
     } catch {
@@ -478,6 +496,7 @@ export default function SessionLiveView({ session }: Props) {
             {usageInfo &&
               !usageInfo.isPro &&
               status !== "COMPLETED" &&
+              usageInfo.usedTotal > 0 &&
               `${usageInfo.remaining}/${usageInfo.limit} left`}
           </span>
 
@@ -986,7 +1005,9 @@ export default function SessionLiveView({ session }: Props) {
                 >
                   {usageInfo &&
                     !usageInfo.isPro &&
-                    `${usageInfo.remaining} of ${usageInfo.limit} free summaries remaining`}
+                    (usageInfo.usedTotal === 0
+                      ? `${usageInfo.limit} free summaries available`
+                      : `${usageInfo.remaining} of ${usageInfo.limit} free summaries remaining`)}
                 </p>
                 <button
                   onClick={handleSummarize}
