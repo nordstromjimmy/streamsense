@@ -215,11 +215,18 @@ export default function SessionLiveView({ session }: Props) {
       const res = await fetch(`/api/sessions/${session.id}/summarize`, {
         method: "POST",
       });
+      const data = await res.json();
+
       if (res.status === 429) {
         setSummarizing(false);
-        setShowUpgrade(true);
+        if (data.limitReached) {
+          setShowUpgrade(true); // only show upgrade modal if limit is actually hit
+        } else {
+          setLimitError(data.error); // show the actual reason (too short, not enough messages)
+        }
         return;
       }
+
       const interval = setInterval(async () => {
         const r = await fetch(`/api/sessions/${session.id}/messages`);
         const d = await r.json();

@@ -50,9 +50,11 @@ export async function POST(
     return NextResponse.json(
       {
         error: limitCheck.reason,
-        usedToday: limitCheck.usedTotal,
+        usedTotal: limitCheck.usedTotal,
         limit: limitCheck.limit,
-        limitReached: true,
+        limitReached:
+          limitCheck.usedTotal !== undefined &&
+          limitCheck.usedTotal >= (limitCheck.limit ?? 2),
       },
       { status: 429 },
     );
