@@ -711,16 +711,13 @@ export default function SessionLiveView({ session }: Props) {
               <div
                 style={{
                   textAlign: "center",
-                  color: "var(--text-dim)",
+                  color: "var(--text-muted)",
                   fontSize: "0.85rem",
                   marginTop: 48,
                 }}
               >
                 Waiting for chat messages...
                 <br />
-                <span style={{ fontSize: "0.75rem" }}>
-                  Make sure the worker is running in a separate terminal
-                </span>
               </div>
             )}
             {messages.map((msg) => (
