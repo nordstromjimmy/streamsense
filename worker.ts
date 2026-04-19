@@ -1,5 +1,8 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+dotenv.config({
+  path:
+    process.env.NODE_ENV === "production" ? ".env.production" : ".env.local",
+});
 import { Client, ChatUserstate } from "tmi.js";
 import { PrismaClient } from "@prisma/client";
 import { getStreamInfo } from "./app/lib/twitch";

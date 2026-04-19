@@ -27,6 +27,7 @@ interface Props {
   recentSessions: RecentSession[];
   totalMessages: number;
   totalActionable: number;
+  isPro: boolean;
 }
 
 function timeAgo(date: Date): string {
@@ -43,10 +44,13 @@ export default function DashboardClient({
   recentSessions,
   totalMessages,
   totalActionable,
+  isPro,
 }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [deletingGameId, setDeletingGameId] = useState<string | null>(null);
   const router = useRouter();
+
+  const [portalLoading, setPortalLoading] = useState(false);
 
   async function handleDeleteGame(e: React.MouseEvent, gameId: string) {
     e.preventDefault();
@@ -58,6 +62,14 @@ export default function DashboardClient({
     await fetch(`/api/games/${gameId}`, { method: "DELETE" });
     setDeletingGameId(null);
     router.refresh();
+  }
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    const res = await fetch("/api/stripe/portal", { method: "POST" });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else setPortalLoading(false);
   }
 
   return (
@@ -210,6 +222,26 @@ export default function DashboardClient({
           >
             {user.name}
           </span>
+          {isPro && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+              style={{
+                padding: "7px 14px",
+                background: "transparent",
+                color: "var(--accent)",
+                border: "1px solid var(--accent-border)",
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                fontFamily: "'Space Mono', monospace",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {portalLoading ? "..." : "Pro ✦"}
+            </button>
+          )}
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             style={{
@@ -242,7 +274,7 @@ export default function DashboardClient({
               whiteSpace: "nowrap",
             }}
           >
-            + Add Game
+            Add Game
           </button>
         </div>
       </header>

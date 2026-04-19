@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  isPro         Boolean        @default(false)
-  games         Game[]
-  createdAt     DateTime  @default(now())
-  accounts      Account[]
-  sessions      Session[]
-  summaryUsage  SummaryUsage[]
+  id                   String         @id @default(cuid())
+  name                 String?
+  email                String?        @unique
+  emailVerified        DateTime?
+  image                String?
+  isPro                Boolean        @default(false)
+  stripeCustomerId     String?        @unique
+  stripeSubscriptionId String?        @unique
+  games                Game[]
+  accounts             Account[]
+  sessions             Session[]
+  summaryUsage         SummaryUsage[]
+  createdAt            DateTime       @default(now())
 }
 
 model SummaryUsage {

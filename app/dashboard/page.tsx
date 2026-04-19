@@ -8,6 +8,11 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { isPro: true },
+  });
+
   const games = await db.game.findMany({
     where: { userId: session.user.id },
     include: {
@@ -44,6 +49,7 @@ export default async function DashboardPage() {
       recentSessions={recentSessions}
       totalMessages={totalMessages}
       totalActionable={totalActionable._sum.actionableCount ?? 0}
+      isPro={user?.isPro ?? false}
     />
   );
 }
