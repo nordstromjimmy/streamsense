@@ -516,6 +516,26 @@ export default function LandingPage() {
           Not affiliated with or endorsed by Twitch Interactive, Inc.
         </p>
       </footer>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "StreamSense",
+            applicationCategory: "DeveloperApplication",
+            description:
+              "Turn Twitch chat into actionable game feedback for indie developers.",
+            url: "https://streamsenseapp.com",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+            operatingSystem: "Web",
+          }),
+        }}
+      />
     </main>
   );
 }

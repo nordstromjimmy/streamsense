@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /sessions
+Disallow: /api/
+
+Sitemap: https://streamsenseapp.com/sitemap.xml

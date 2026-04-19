@@ -1,4 +1,12 @@
+import { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "StreamSense terms of service — the rules for using our platform.",
+  robots: { index: true, follow: false },
+};
 
 export default function TermsPage() {
   return (

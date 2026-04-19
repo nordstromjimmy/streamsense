@@ -3,8 +3,38 @@ import "./globals.css";
 import SessionProvider from "./components/SessionProvider";
 
 export const metadata: Metadata = {
-  title: "StreamSense — Twitch Feedback for Indie Devs",
-  description: "Turn Twitch chat into actionable game feedback.",
+  title: {
+    default: "StreamSense — Twitch Chat Feedback for Indie Game Developers",
+    template: "%s | StreamSense",
+  },
+  description:
+    "Turn Twitch chat into actionable game feedback. Capture live streams of your game and get AI-powered summaries of bugs, UX issues, and feature requests.",
+  metadataBase: new URL("https://streamsenseapp.com"),
+  openGraph: {
+    title: "StreamSense — Twitch Chat Feedback for Indie Devs",
+    description: "Turn Twitch chat into actionable game feedback.",
+    url: "https://streamsenseapp.com",
+    siteName: "StreamSense",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StreamSense — Twitch Chat Feedback for Indie Devs",
+    description: "Turn Twitch chat into actionable game feedback.",
+    creator: "@streamsenseapp", // add your Twitter handle if you have one
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+  alternates: {
+    canonical: "https://streamsenseapp.com",
+  },
 };
 
 export default function RootLayout({

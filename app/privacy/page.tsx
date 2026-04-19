@@ -1,4 +1,12 @@
+import { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "StreamSense privacy policy — how we collect, use, and protect your data.",
+  robots: { index: true, follow: false },
+};
 
 export default function PrivacyPage() {
   return (
