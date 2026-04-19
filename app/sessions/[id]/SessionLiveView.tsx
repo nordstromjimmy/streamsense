@@ -196,6 +196,31 @@ export default function SessionLiveView({ session }: Props) {
   }, []);
 
   async function handleStop() {
+    // Check message count before stopping
+    if (messages.length < 20) {
+      setLimitError(
+        `Not enough messages to summarize. Need at least 20, only ${messages.length} captured.`,
+      );
+      return;
+    }
+
+    // Check session duration
+    const durationMinutes =
+      (Date.now() - new Date(session.startedAt).getTime()) / 1000 / 60;
+    if (durationMinutes < 5) {
+      const waitMinutes = Math.ceil(5 - durationMinutes);
+      setLimitError(
+        `Session must run for at least 5 minutes. Wait ${waitMinutes} more minute${waitMinutes !== 1 ? "s" : ""}.`,
+      );
+      return;
+    }
+
+    // Check summary limit
+    if (usageInfo && usageInfo.remaining === 0 && !usageInfo.isPro) {
+      setShowUpgrade(true);
+      return;
+    }
+
     setSummarizing(true);
     setLimitError(null);
     const res = await fetch(`/api/sessions/${session.id}`, { method: "PATCH" });
