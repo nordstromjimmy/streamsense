@@ -1,15 +1,14 @@
 import { db } from "./db";
 
 // LIVE LIMITS
-/* const FREE_SUMMARY_LIMIT = 2; // lifetime total for free users
+const FREE_SUMMARY_LIMIT = 2;
 const MIN_MESSAGES_TO_SUMMARIZE = 20;
-const MIN_SESSION_DURATION_MINUTES = 5; */
+const MIN_SESSION_DURATION_MINUTES = 5;
 
 // DEV LIMITS
-
-const FREE_SUMMARY_LIMIT = 2;
+/* const FREE_SUMMARY_LIMIT = 2;
 const MIN_MESSAGES_TO_SUMMARIZE = 1;
-const MIN_SESSION_DURATION_MINUTES = 0;
+const MIN_SESSION_DURATION_MINUTES = 0; */
 
 export interface LimitCheck {
   allowed: boolean;

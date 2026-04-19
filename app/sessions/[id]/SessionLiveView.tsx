@@ -716,7 +716,6 @@ export default function SessionLiveView({ session }: Props) {
                   marginTop: 48,
                 }}
               >
-                <div style={{ fontSize: 24, marginBottom: 12 }}>⏳</div>
                 Waiting for chat messages...
                 <br />
                 <span style={{ fontSize: "0.75rem" }}>
