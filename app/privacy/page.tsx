@@ -77,12 +77,7 @@ export default function PrivacyPage() {
             marginBottom: 48,
           }}
         >
-          Last updated:{" "}
-          {new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          Last updated: April 1, 2026
         </p>
 
         {[

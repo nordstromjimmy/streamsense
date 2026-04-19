@@ -42,7 +42,7 @@ export default function LandingPage() {
       <style>{`
         .footer-link {
           font-size: 0.78rem;
-          color: var(--text-dim);
+          color: var(--text-muted);
           text-decoration: none;
           transition: color 0.2s;
         }
@@ -520,7 +520,7 @@ export default function LandingPage() {
           </div>
           <span
             className="mono"
-            style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}
+            style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}
           >
             © {new Date().getFullYear()} StreamSense
           </span>
