@@ -449,7 +449,7 @@ export default function LandingPage() {
                 maxWidth: 400,
               }}
             >
-              2 AI summaries free, unlimited session tracking, smart noise
+              2 AI summaries free, limited session tracking, smart noise
               filtering included. An easy way to get feedback, built for indie
               devs.
             </p>
