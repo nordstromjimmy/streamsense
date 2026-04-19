@@ -203,7 +203,7 @@ export default function UpgradeModal({ onClose }: Props) {
             </div>
             {[
               { text: "Unlimited summaries", ok: true },
-              { text: "Unlimited Sessions", ok: true },
+              { text: "Unlimited sessions", ok: true },
               { text: "Smart filtering", ok: true },
               { text: "Priority support", ok: true },
               { text: "Access to new features", ok: true },
