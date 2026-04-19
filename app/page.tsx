@@ -46,6 +46,9 @@ export default function LandingPage() {
           text-decoration: none;
           transition: color 0.2s;
         }
+          .nav-title-text {
+          display: inline;
+        }
         .footer-link:hover { color: var(--text-muted); }
         @media (max-width: 640px) {
           main { padding: 0 16px; }
@@ -56,6 +59,7 @@ export default function LandingPage() {
           .footer-links { justify-content: center !important; }
           .footer-disclaimer { text-align: center !important; }
           .nav-title { height: 60px !important; } 
+          .nav-title-text { display: none; }
         }
       `}</style>
 
@@ -76,15 +80,31 @@ export default function LandingPage() {
           style={{
             display: "flex",
             alignItems: "center",
+            gap: 12,
             textDecoration: "none",
           }}
         >
           <img
-            src="/logo3.png"
+            src="/logo.png"
             alt="StreamSense"
             className="nav-title"
-            style={{ height: 100, width: "auto" }}
+            style={{ height: 110, width: "auto" }}
           />
+          <span
+            className="nav-title-text"
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontWeight: 700,
+              fontSize: "2.4rem",
+              letterSpacing: "-0.02em",
+              background: "linear-gradient(135deg, #9147ff 0%, #f0a500 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            StreamSense
+          </span>
         </Link>
         <Link
           href="/dashboard"
