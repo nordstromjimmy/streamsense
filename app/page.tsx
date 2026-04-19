@@ -363,7 +363,7 @@ export default function LandingPage() {
             {
               n: "03",
               title: "Get your digest",
-              desc: "Stop anytime. We filter noise and generate a structured AI summary you can export.",
+              desc: "We filter noise and generate a structured summary you can review and act on right away.",
             },
           ].map((step) => (
             <div className="card" key={step.n} style={{ padding: 28 }}>
